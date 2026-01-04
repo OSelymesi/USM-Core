@@ -1,0 +1,16 @@
+# Build artifacts
+*.exe
+*.obj
+*.exp
+*.lib
+*.o
+*.out
+
+# Editor trash
+.vscode/
+.idea/
+*.swp
+
+# Specific binary names
+benchmark
+usm_test
