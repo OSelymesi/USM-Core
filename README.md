@@ -27,15 +27,15 @@ USM inverts the model. Threads do not "own" streams. Instead, a swarm of threads
 
 USM is not just about raw speed; it's about architectural efficiency. By collapsing multi-stage pipelines into a single kernel, it reduces VRAM traffic and CPU overhead.
 
-**Measured on Desktop NVIDIA GPU vs. Optimized Multi-Kernel Baselines:**
+**Measured on NVIDIA GTX 1070 (Pascal) + Ryzen 7 3700X (Windows):**
 
 | Scenario | Problem Type | Baseline Time | USM Time | Speedup | Why USM Wins |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Ragged Reduction** | 10M elements $\to$ 100k variable length streams | 5.51 ms | **2.25 ms** | **2.45x** | Eliminates binary search overhead per thread & warp divergence. |
-| **Nested Analytics** | 5M events $\to$ Items $\to$ Users (Hierarchical) | 0.65 ms | **0.47 ms** | **1.38x** | **Zero-Copy / Single-Pass.** Updates multiple levels simultaneously without intermediate VRAM buffers. |
+| **Ragged Reduction** | 10M elements $\to$ 100k variable length streams | 5.49 ms | **2.24 ms** | **2.45x** | Eliminates binary search overhead per thread & warp divergence. |
+| **Nested Analytics** | 5M events $\to$ Items $\to$ Users (Hierarchical) | 0.94 ms | **0.47 ms** | **1.98x** | **Zero-Copy / Single-Pass.** Eliminates intermediate global memory writes and kernel launch latency. |
 | **Mixed Batch** | Heterogeneous Ops (Sum, Max, L2) | *N/A* | 1.83 ms | *Feature* | **Capabilities Demo.** Fuses different operations in one batch (impossible in standard libs). |
 
-> **Note:** The "Nested Analytics" speedup of ~1.4x is purely computational. In a real-world end-to-end pipeline, the savings are significantly higher because USM eliminates the need to allocate and write intermediate buffers to global memory.
+> **Note:** The "Nested Analytics" speedup is particularly strong (~2x) on systems with higher driver overhead (like Windows WDDM) because USM performs the entire logic in a single kernel launch, bypassing the CPU bottleneck of multi-kernel baselines.
 
 ---
 
