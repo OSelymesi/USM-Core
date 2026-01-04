@@ -8,8 +8,8 @@ USM is engineered specifically for **irregular, ragged, and nested workloads** w
 
 ---
 
-## ⚡ The Paradigm Shift
-
+## ⚡ The Architectural Flip
+ 
 ### The Old Way: "Thread Ownership"
 Classic GPU reduction assumes every thread owns a specific stream or segment.
 * **The Flaw:** If Stream A has 1 element and Stream B has 10,000, you get massive warp divergence and load imbalance.
