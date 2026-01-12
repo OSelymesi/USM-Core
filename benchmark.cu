@@ -4,12 +4,12 @@
 #include <algorithm>
 #include <random>
 #include <cuda_runtime.h>
-#include "include/usm_core.cuh" // Vagy "usm_core.cuh"
+#include "usm_core.cuh" // Assuming usm_core.cuh is in the same directory or include path
 
-// Makró a hibakezelésre
+// Macro for error handling
 #define CUDA_CHECK(call) { cudaError_t err = call; if(err != cudaSuccess) { printf("CUDA Error: %s line %d\n", cudaGetErrorString(err), __LINE__); exit(1); } }
 
-// Segédfüggvény: Eredmények összehasonlítása (Validáció)
+// Helper function: Verify results (Validation)
 void verify_results(const float* baseline, const float* usm, int n, const char* name) {
     std::vector<float> h_base(n), h_usm(n);
     CUDA_CHECK(cudaMemcpy(h_base.data(), baseline, n*4, cudaMemcpyDeviceToHost));
@@ -20,25 +20,25 @@ void verify_results(const float* baseline, const float* usm, int n, const char* 
         double diff = fabs(h_base[i] - h_usm[i]);
         if(diff > max_diff) max_diff = diff;
     }
-    // Lebegőpontos hiba tűréshatár
+    // Floating point tolerance
     if(max_diff < 0.1) printf("   [OK] Validation Passed (Max Diff: %.5f)\n", max_diff);
     else printf("   [FAIL] Validation Failed! (Max Diff: %.5f)\n", max_diff);
 }
 
-// Terhelés szimuláció (hogy ne csak a memória döntsön)
+// Workload simulation (compute bound vs memory bound check)
 __device__ __forceinline__ float heavy_work(float v) {
     return sinf(v) * cosf(v) + sqrtf(fabsf(v));
 }
 
 // =========================================================
 // 1. SCENARIO: RAGGED REDUCTION
-// Baseline: Naive Atomic (Minden szál egy elem, atomikus harc)
-// USM: Grid-Stride (Jobb elosztás, kevesebb overhead)
+// Baseline: Naive Atomic (One thread per element, atomic contention)
+// USM: Grid-Stride (Better distribution, less overhead)
 // =========================================================
 __global__ void ragged_baseline_kernel(int n, const float* vals, const int* offsets, int num_streams, float* out) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < n) {
-        // Naiv keresés (minden szál binárisan keres - ez a lassú rész!)
+        // Naive search (binary search per thread - this is the slow part!)
         int left = 0, right = num_streams;
         while (left < right) {
             int mid = (left + right) / 2;
@@ -105,7 +105,7 @@ void demo_ragged() {
 // =========================================================
 // 2. SCENARIO: NESTED ANALYTICS
 // Baseline: 2 Kernels (Redundant Compute + Global Mem R/W)
-// USM: 1 Kernel (Single Compute, Zero Intermediate Mem)
+// USM: 1 Kernel (Single Compute, Zero Intermediate Memory)
 // =========================================================
 __global__ void nested_base1(int n, const float* v, const int* e2i, float* out) {
     int i = blockIdx.x*blockDim.x+threadIdx.x;
@@ -175,26 +175,26 @@ void demo_nested() {
 // =========================================================
 __global__ void mixed_base_sum(int n, const float* v, const int* off, const int* op, float* out) {
     int i=blockIdx.x*blockDim.x+threadIdx.x;
-    // Nagyon naiv baseline: minden kernel átnézi az összeset, és csak a sajátját csinálja
-    // Ez a "szűrő" logika gyakori, ha nincs fused kernel.
-    if(i<n) { /* (Rövidített szimuláció, nem implementáljuk a teljes keresést a baselinehoz, mert túl lassú lenne. 
-                 Helyette feltételezzük, hogy a baseline is tudja a stream ID-t, de 3 külön kernel launch kell.) */
+    // Very naive baseline: each kernel scans everything and filters for its own work
+    // This "filter" logic is common without fused kernels.
+    if(i<n) { 
+        /* (Shortened simulation, full search not implemented for baseline as it would be too slow. 
+            Assuming baseline knows stream ID, but requires 3 launches.) */
     } 
-    // Ezt a demót egyszerűsítsük le: 
-    // A Mixed Operations USM előnye a kód tisztaság. A sebességméréshez itt
-    // csak a USM flexibilitását mutatjuk be, nem hasonlítjuk össze 3 külön kernellel, 
-    // mert az overkill lenne ide. Maradjon "Flexibility Demo".
+    // Simplifying this demo:
+    // The advantage of Mixed Operations USM is code cleanliness. For benchmarking, we only 
+    // demonstrate USM flexibility here, avoiding comparison with 3 separate kernels as it 
+    // would be overkill. Keeping it as a "Flexibility Demo".
 }
 
-// (Ehhez a demóhoz most csak a USM futást hagyjuk meg, mert a baseline implementációja 3x annyi kód lenne)
-// Helyette hívjuk ezt "Flexibility Showcase"-nek.
+// (Keeping only the USM run for this demo, as baseline implementation would be 3x the code)
+// Calling this "Flexibility Showcase" instead.
 
 void demo_mixed_showcase() {
     printf("\n--- [3] MIXED BATCH FLEXIBILITY (Fused Sum/Max/L2) ---\n");
     printf("   (Demonstrating capability to handle heterogeneous ops in one pass)\n");
     
-    // ... (A korábbi mixed kód röviden) ...
-    // Helyhiány miatt most csak kiírom:
+    // ... (Mixed code omitted for brevity in demo) ...
     printf("   [INFO] USM successfully fused SUM, MAX, and L2 operations.\n");
     printf("   [INFO] No baseline comparison here (Feature Showcase).\n");
 }
