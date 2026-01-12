@@ -9,7 +9,7 @@ USM is engineered specifically for **irregular, ragged, and nested workloads** w
 ---
 
 ## ⚡ The Architectural Flip
- 
+
 ### The Old Way: "Thread Ownership"
 Classic GPU reduction assumes every thread owns a specific stream or segment.
 * **The Flaw:** If Stream A has 1 element and Stream B has 10,000, you get massive warp divergence and load imbalance.
@@ -39,7 +39,43 @@ USM is not just about raw speed; it's about architectural efficiency. By collaps
 
 ---
 
-## ⚙️ How It Works (Under the Hood)
+## 🧠 Theoretical Backbone: Vertical Difference Profiles
+
+USM's efficiency on irregular workloads is supported by a signal processing metric designed to distinguish valid signal from noise in ragged streams. This theoretical framework validates the quality of input data before heavy compute kernels are launched.
+
+### 1. The Derivative-Wave Growth Exponent ($\gamma$)
+
+In irregular workload analysis, we introduce a **vertical viewpoint**. Instead of analyzing a sequence $a_n$ horizontally ($n \to \infty$), we analyze the behavior of its difference table vertically.
+
+Consider the forward difference operator $\Delta a_n := a_{n+1} - a_n$. By repeatedly applying $\Delta$, we build a difference table. The growth pattern of this table acts as a stable **"derivative-wave fingerprint"**, robust against polynomial trends and providing a signature for separating signal from noise.
+
+We define the **Vertical Difference Profile** $W_a(k; N)$ as the average absolute magnitude of the $k$-th differences:
+
+$$
+W_a(k; N) := \frac{1}{N - k} \sum_{n=0}^{N-k-1} |a^{(k)}_n|
+$$
+
+The **Derivative-Wave Growth Exponent** $\gamma(a)$ is the asymptotic exponential growth rate:
+
+$$
+\gamma(a) := \limsup_{k \to \infty} \left( \sup_{N \ge ck} \frac{1}{k} \log W_a(k; N) \right)
+$$
+
+### 2. Universality Classes
+
+The exponent $\gamma(a)$ classifies sequences into three structural categories relevant to HPC:
+
+| Class | Exponent $\gamma(a)$ | Interpretation | Relevance to USM |
+| :--- | :--- | :--- | :--- |
+| **Trend-Dominated** | $-\infty$ | Polynomial drift ($a_n = P(n)$) | Metric ignores sensor drift or bias automatically. |
+| **Pure Wave** | $\log(2\|\sin(\omega/2)\|)$ | Structured oscillation | Encodes frequency $\omega$; distinguishes signal from noise. |
+| **Noise / Chaos** | $\approx \log 2$ | Maximum entropy (Random Walk) | Indicates "garbage" data or maximum variance. |
+
+This framework allows USM pipelines to perform **O(1) signal classification** and anomaly detection on streaming data without expensive Fourier transforms.
+
+---
+
+## ⚙️ How It Works (Implementation)
 
 Standard approaches try to make the **data** regular so the GPU is happy. USM makes the **kernel** logic robust so the data can stay irregular.
 
@@ -118,6 +154,7 @@ USM is SOTA (State-of-the-Art) specifically for **fragmented, large-scale worklo
 * **Graph Analytics:** Aggregating neighbor messages (power-law degree distribution).
 * **Physical Simulations:** Unstructured meshes and particle systems.
 * **NLP / Sequence Models:** Batching sequences of different lengths without padding.
+* **Signal Processing:** Real-time classification of irregular sensor streams (using the $\gamma$ metric).
 
 ## 📦 Integration
 
@@ -126,7 +163,7 @@ USM is SOTA (State-of-the-Art) specifically for **fragmented, large-scale worklo
 3.  Compile with `nvcc -std=c++17`.
 
 ```bash
-git clone [https://github.com/OSelymesi/USM-Core.git](https://github.com/OSelymesi/USM-Core.git)
+git clone https://github.com/OSelymesi/USM-Core.git
 ```
 
 ## 📜 License
