@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <random>
 #include <cuda_runtime.h>
-#include "usm_core.cuh" // Assuming usm_core.cuh is in the same directory or include path
+#include "./include/usm_core.cuh" // Assuming usm_core.cuh is in the same directory or include path
 
 // Macro for error handling
 #define CUDA_CHECK(call) { cudaError_t err = call; if(err != cudaSuccess) { printf("CUDA Error: %s line %d\n", cudaGetErrorString(err), __LINE__); exit(1); } }
@@ -209,3 +209,4 @@ int main() {
     
     return 0;
 }
+
