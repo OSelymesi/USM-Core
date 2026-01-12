@@ -59,7 +59,7 @@ For sequences behaving like independent random variables (e.g., Bernoulli $\pm 1
 | Behavior Type | Growth Exponent $\gamma(a)$ | Physical Interpretation |
 | :--- | :--- | :--- |
 | **Polynomial Trend** | $-\infty$ | Deterministic drift, low entropy. |
-| **Pure Wave** | $log(2|sin(Ω/2)|)$ | Structured oscillation, frequency-dependent. |
+| **Pure Wave** | $log(2)|sin(Ω/2)|)$ | Structured oscillation, frequency-dependent. |
 | **Noise / Chaos** | $\approx \log 2$ | Maximum entropy, uncorrelated fluctuations. |
 
 ## 5. Applications in High-Performance Computing
