@@ -81,7 +81,7 @@ usm::launch(num_events, HierarchyNav{...}, DualAggregator{...});
 
 ## 🎯 Ideal Use Cases
 
-USM is SOTA (State-of-the-Art) specifically for **fragmented, large-scale workloads** where `N_total` is large but `N_per_stream` varies wildly.
+USM is best specifically for **fragmented, large-scale workloads** where `N_total` is large but `N_per_stream` varies wildly.
 
 * **Recommender Systems:** User history aggregation (variable length sessions).
 * **Graph Analytics:** Aggregating neighbor messages (power-law degree distribution).
